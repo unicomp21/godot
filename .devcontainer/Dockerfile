@@ -1,14 +1,35 @@
-# Use an existing docker image where Godot is installed
-FROM godotengine/godot:latest
+# Use Ubuntu as a base image
+FROM ubuntu:latest
 
-# The docker user that you want, change the uid and gid as needed
-RUN useradd -m godotdev --uid=1000 && echo "godotdev:godotdev" | chpasswd && adduser godotdev sudo
-
-# Switch to the new user
-USER godotdev
+# Avoid tzdata asking questions
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Set the working directory
-WORKDIR /home/godotdev
+WORKDIR /src
 
-# Run the command on container startup
-CMD ["bash"]
+# Install the dependencies
+RUN apt-get update -y && \
+    apt-get install -y scons pkg-config libx11-dev libxcursor-dev libxinerama-dev \
+    libgl1-mesa-dev libglu-dev libasound2-dev libpulse-dev libudev-dev libxi-dev \
+    libxrandr-dev python3 git wget nodejs
+
+# Clone and build Emscripten
+WORKDIR /
+RUN git clone https://github.com/emscripten-core/emsdk.git
+WORKDIR /emsdk
+RUN ./emsdk install latest
+RUN ./emsdk activate latest
+
+# Set up Emscripten environment variables
+ENV EMSDK=/emsdk
+ENV EM_CONFIG=/emsdk/.emscripten
+ENV EM_CACHE=/emsdk/cache
+ENV EM_PORTS=/emsdk/ports
+
+# Add emscripten to PATH
+ENV PATH="/emsdk:${PATH}"
+ENV PATH="/emsdk/upstream/emscripten:${PATH}"
+ENV PATH="/emsdk/node/15.14.0_64bit/bin:${PATH}"
+
+RUN mkdir /godot
+WORKDIR /godot
