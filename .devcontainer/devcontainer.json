@@ -1,0 +1,10 @@
+{
+    "name": "Godot Dev Container",
+    "dockerFile": "Dockerfile",
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "appPort": ["6007:6007", "50051:50051"],
+    "postCreateCommand": "echo 'Container setup completed'",
+    "extensions": ["godot.godot-vscode-plugin"]
+}
